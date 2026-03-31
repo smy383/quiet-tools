@@ -22,3 +22,8 @@ firebase-debug.log
 
 # Memory / agent room logs
 memory/
+
+# Fastlane 키 파일 (절대 커밋 금지!)
+fastlane-key.json
+fastlane/api_key.json
+fastlane/AuthKey.p8

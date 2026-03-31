@@ -1,0 +1,175 @@
+# Quiet Tools — 모노레포 통합 배포 Fastfile
+# 사용법:
+#   Android: fastlane android internal app:unit_converter
+#   iOS:     fastlane ios testflight app:unit_converter
+
+# ── 앱 설정 테이블 ─────────────────────────────────────────────────
+APPS = {
+  'unit_converter' => {
+    package:  'com.quiettools.unitconverter',
+    name:     '단위 변환기',
+    sku:      'qt_unit_converter',
+  },
+  'loan_calculator' => {
+    package:  'com.quiettools.loancalculator',
+    name:     '대출 이자 계산기',
+    sku:      'qt_loan_calculator',
+  },
+  'first_aid' => {
+    package:  'com.quiettools.firstaid',
+    name:     '응급처치 가이드',
+    sku:      'qt_first_aid',
+  },
+  'habit_tracker' => {
+    package:  'com.quiettools.habittracker',
+    name:     '습관 추적기',
+    sku:      'qt_habit_tracker',
+  },
+  'budget' => {
+    package:  'com.quiettools.budget',
+    name:     '가계부',
+    sku:      'qt_budget',
+  },
+  'workout' => {
+    package:  'com.quiettools.workout',
+    name:     '운동 세트 기록기',
+    sku:      'qt_workout',
+  },
+  'journal' => {
+    package:  'com.quiettools.journal',
+    name:     '일기 저널',
+    sku:      'qt_journal',
+  },
+  'book_log' => {
+    package:  'com.quiettools.booklog',
+    name:     '독서 기록',
+    sku:      'qt_book_log',
+  },
+  'white_noise' => {
+    package:  'com.quiettools.whitenoise',
+    name:     '백색소음',
+    sku:      'qt_white_noise',
+  },
+  'tuner' => {
+    package:  'com.quiettools.tuner',
+    name:     '튜너',
+    sku:      'qt_tuner',
+  },
+}.freeze
+
+ROOT_DIR       = File.expand_path('..', __dir__)
+ANDROID_KEY    = File.join(ROOT_DIR, 'fastlane-key.json')
+IOS_API_KEY    = File.join(ROOT_DIR, 'fastlane', 'api_key.json')
+
+def resolve_app(options)
+  app = options[:app]
+  UI.user_error!("app 파라미터가 필요합니다. 예: app:unit_converter") unless app
+  config = APPS[app]
+  UI.user_error!("알 수 없는 앱: #{app}\n사용 가능: #{APPS.keys.join(', ')}") unless config
+  [app, config]
+end
+
+def app_dir(app)
+  File.join(ROOT_DIR, 'apps', app)
+end
+
+def build_android(app)
+  UI.message("🏗️  Android AAB 빌드 중: #{app}")
+  Dir.chdir(app_dir(app)) { sh('flutter build appbundle --release') }
+end
+
+def build_ios(app)
+  UI.message("🏗️  iOS IPA 빌드 중: #{app}")
+  Dir.chdir(app_dir(app)) do
+    sh('flutter build ipa --release --no-codesign')
+  end
+end
+
+# ── Android ────────────────────────────────────────────────────────
+platform :android do
+
+  desc "내부 테스트 배포 (internal) — fastlane android internal app:unit_converter"
+  lane :internal do |options|
+    app, config = resolve_app(options)
+    build_android(app)
+    upload_to_play_store(
+      package_name:          config[:package],
+      track:                 'internal',
+      json_key:              ANDROID_KEY,
+      aab:                   "#{app_dir(app)}/build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata:  true,
+      skip_upload_images:    true,
+      skip_upload_screenshots: true,
+      release_status:        'completed',
+    )
+    UI.success("✅ #{config[:name]} → Play Store 내부 테스트 배포 완료!")
+  end
+
+  desc "비공개 테스트 배포 (alpha) — fastlane android alpha app:unit_converter"
+  lane :alpha do |options|
+    app, config = resolve_app(options)
+    build_android(app)
+    upload_to_play_store(
+      package_name:          config[:package],
+      track:                 'alpha',
+      json_key:              ANDROID_KEY,
+      aab:                   "#{app_dir(app)}/build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata:  true,
+      skip_upload_images:    true,
+      skip_upload_screenshots: true,
+    )
+    UI.success("✅ #{config[:name]} → Play Store 비공개 테스트 배포 완료!")
+  end
+
+  desc "프로덕션 배포 (draft) — fastlane android production app:unit_converter"
+  lane :production do |options|
+    app, config = resolve_app(options)
+    build_android(app)
+    upload_to_play_store(
+      package_name:          config[:package],
+      track:                 'production',
+      release_status:        'draft',
+      json_key:              ANDROID_KEY,
+      aab:                   "#{app_dir(app)}/build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata:  true,
+      skip_upload_images:    true,
+      skip_upload_screenshots: true,
+    )
+    UI.success("✅ #{config[:name]} → Play Store 프로덕션 초안 업로드 완료! (Play Console에서 직접 출시)")
+  end
+
+end
+
+# ── iOS ────────────────────────────────────────────────────────────
+platform :ios do
+
+  desc "TestFlight 내부 테스트 배포 — fastlane ios testflight app:unit_converter"
+  lane :testflight do |options|
+    app, config = resolve_app(options)
+    build_ios(app)
+    upload_to_testflight(
+      api_key_path:                      IOS_API_KEY,
+      ipa:                               "#{app_dir(app)}/build/ios/ipa/Runner.ipa",
+      skip_waiting_for_build_processing: true,
+      skip_submission:                   true,
+    )
+    UI.success("✅ #{config[:name]} → TestFlight 배포 완료!")
+  end
+
+  desc "App Store 업로드 (심사 제출 안 함) — fastlane ios appstore app:unit_converter"
+  lane :appstore do |options|
+    app, config = resolve_app(options)
+    build_ios(app)
+    upload_to_app_store(
+      api_key_path:                    IOS_API_KEY,
+      app_identifier:                  config[:package],
+      ipa:                             "#{app_dir(app)}/build/ios/ipa/Runner.ipa",
+      submit_for_review:               false,
+      skip_metadata:                   true,
+      skip_screenshots:                true,
+      precheck_include_in_app_purchases: false,
+    )
+    UI.success("✅ #{config[:name]} → App Store 업로드 완료!")
+  end
+
+end
