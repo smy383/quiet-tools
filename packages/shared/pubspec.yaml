@@ -1,0 +1,39 @@
+name: shared
+description: "Quiet Tools — 공통 테마, 위젯, 유틸리티 패키지"
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ^3.10.8
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_mobile_ads: ^5.3.0
+  flutter_riverpod: ^2.6.1
+  riverpod: ^2.6.1
+  shared_preferences: ^2.3.4
+  material_symbols_icons: ^4.2719.3
+  animations: ^2.0.11
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: NotoSansKR
+      fonts:
+        - asset: assets/fonts/NotoSansKR-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansKR-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSansKR-Bold.ttf
+          weight: 700
+
+  assets:
+    - assets/fonts/
