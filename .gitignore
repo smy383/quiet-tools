@@ -27,3 +27,5 @@ memory/
 fastlane-key.json
 fastlane/api_key.json
 fastlane/AuthKey.p8
+upload-keystore.jks
+key.properties
