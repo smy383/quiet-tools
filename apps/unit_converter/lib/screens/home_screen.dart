@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../models/unit_category.dart';
-import '../providers/conversion_provider.dart';
 import '../widgets/category_card.dart';
 import 'conversion_screen.dart';
 
@@ -38,11 +37,10 @@ class HomeScreen extends ConsumerWidget {
             return CategoryCard(
               category: category,
               onTap: () {
-                ref.read(conversionProvider.notifier).setCategory(category);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const ConversionScreen(),
+                    builder: (_) => ConversionScreen(category: category),
                   ),
                 );
               },

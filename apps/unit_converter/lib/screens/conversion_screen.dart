@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
+import '../models/unit_category.dart';
 import '../providers/conversion_provider.dart';
 import '../widgets/conversion_result_tile.dart';
 
 class ConversionScreen extends ConsumerStatefulWidget {
-  const ConversionScreen({super.key});
+  const ConversionScreen({super.key, required this.category});
+
+  final UnitCategory category;
 
   @override
   ConsumerState<ConversionScreen> createState() => _ConversionScreenState();
@@ -18,10 +21,11 @@ class _ConversionScreenState extends ConsumerState<ConversionScreen> {
   @override
   void initState() {
     super.initState();
-    final state = ref.read(conversionProvider);
-    _controller = TextEditingController(
-      text: _formatInput(state.inputValue),
-    );
+    // 전달받은 category로 provider 초기화
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(conversionProvider.notifier).setCategory(widget.category);
+    });
+    _controller = TextEditingController(text: '1');
   }
 
   @override
