@@ -48,14 +48,25 @@ class AppScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final adBanner = showAd ? _AdBannerWidget(adUnitId: adUnitId) : null;
 
+    // 광고 배너를 body 상단에 표시할 때만 Column으로 처리
     Widget effectiveBody = body;
-
-    if (adBanner != null) {
+    if (adBanner != null && adBannerPosition == AdBannerPosition.top) {
       effectiveBody = Column(
         children: [
-          if (adBannerPosition == AdBannerPosition.top) adBanner,
+          adBanner,
           Expanded(child: body),
-          if (adBannerPosition == AdBannerPosition.bottom) adBanner,
+        ],
+      );
+    }
+
+    // 하단 광고는 bottomNavigationBar에 배치 → 시스템 네비게이션바 inset 자동 처리
+    Widget? effectiveBottomBar = bottomNavigationBar;
+    if (adBanner != null && adBannerPosition == AdBannerPosition.bottom) {
+      effectiveBottomBar = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (bottomNavigationBar != null) bottomNavigationBar!,
+          adBanner,
         ],
       );
     }
@@ -63,7 +74,7 @@ class AppScaffold extends StatelessWidget {
     return Scaffold(
       appBar: appBar,
       floatingActionButton: floatingActionButton,
-      bottomNavigationBar: bottomNavigationBar,
+      bottomNavigationBar: effectiveBottomBar,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       body: effectiveBody,
     );
