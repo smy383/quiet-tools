@@ -1,4 +1,4 @@
-package com.quiettools.unit_converter
+package com.quiettools.unitconverter
 
 import io.flutter.embedding.android.FlutterActivity
 

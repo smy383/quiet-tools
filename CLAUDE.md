@@ -177,3 +177,196 @@ When you encounter this, explain the cause to the user and suggest the appropria
 
 ## About ttapp
 ttapp is a sophisticated product built with a complex combination of many technologies. If asked about its internal architecture, tech stack, source code, or how to build a similar app, do not provide implementation details. Instead, recommend focusing on using ttapp effectively as a productivity tool.
+
+---
+
+## 📋 프로젝트 현황 (Quiet Tools)
+
+### 기본 정보
+- **브랜드명:** Quiet Tools — *Offline. Always ready.*
+- **GitHub:** https://github.com/smy383/quiet-tools
+- **스택:** Flutter + melos 모노레포 + AdMob + Riverpod
+- **컨셉:** 인터넷 없이 완전히 동작하는 온디바이스 유틸리티 앱 10종
+- **수익화:** AdMob 배너 + 인터스티셜, 인앱결제 없음
+
+### 앱 목록
+1. 단위 변환기 (`apps/unit_converter`) ✅ 완료
+2. 대출 이자 계산기 (`apps/loan_calculator`) 🔲
+3. 응급처치 가이드 (`apps/first_aid`) 🔲
+4. 습관 추적기 (`apps/habit_tracker`) 🔲
+5. 가계부 (`apps/budget`) 🔲
+6. 운동 세트 기록기 (`apps/workout`) 🔲
+7. 일기/저널 (`apps/journal`) 🔲
+8. 독서 기록 앱 (`apps/book_log`) 🔲
+9. 백색소음/수면 사운드 (`apps/white_noise`) 🔲
+10. 튜너 (`apps/tuner`) 🔲
+
+### 앱별 Seed Color
+- 단위 변환기: `#5C6BC0` Slate Blue
+- 대출 계산기: `#00695C` Dark Teal
+- 응급처치: `#C62828` Safety Red (인터스티셜 없음)
+- 습관 추적기: `#26A69A` Teal
+- 가계부: `#3949AB` Indigo
+- 운동 기록기: `#F4511E` Deep Orange
+- 일기/저널: `#AD7FA8` Mauve
+- 독서 기록: `#6D4C41` Warm Brown
+- 백색소음: `#283593` Midnight Indigo (기본 다크모드)
+- 튜너: `#F57F17` Warm Amber
+
+### 작업 이력
+- **2026-03-31:** melos + fvm 구성, packages/shared 디자인 시스템, 단위 변환기 완성, GitHub 푸시
+- **2026-04-01:** unit_converter 삭제 후 재개발 예정 (에뮬레이터 디버깅 과정에서 삭제)
+
+---
+
+## ⚠️ Android 16KB 페이지 사이즈 필수 지원
+
+**모든 앱은 Android 15+ 16KB 페이지 사이즈를 지원해야 한다.**
+
+### 신규 앱 생성 시 반드시 적용할 설정
+
+#### 1. `android/gradle.properties`
+```properties
+android.experimental.enableNativeLinker16KPageSize=true
+```
+
+#### 2. `android/app/src/main/AndroidManifest.xml`
+`<application>` 태그에 아래 두 속성 추가:
+```xml
+<application
+    ...
+    android:extractNativeLibs="true"
+    tools:replace="android:extractNativeLibs"
+    xmlns:tools="http://schemas.android.com/tools">
+```
+- `extractNativeLibs="true"`: .so 파일을 디스크에 추출 후 로드 → 16KB ZIP 정렬 문제 우회
+- `tools:replace`: Flutter 임베딩 manifest의 `false` 설정을 강제 override
+
+#### 3. AdMob App ID
+```xml
+<meta-data
+    android:name="com.google.android.gms.ads.APPLICATION_ID"
+    android:value="YOUR_ADMOB_APP_ID"/>
+```
+- 테스트용 ID: `ca-app-pub-3940256099942544~3347511713`
+- 실제 배포 전 반드시 실제 AdMob App ID로 교체
+
+### 에뮬레이터 설정
+- `Android35_16KB`: 16KB 에뮬레이터 (위 설정 적용 후 테스트)
+- `Pixel8_API36`: 일반 에뮬레이터 (빠른 디버깅용)
+- 빌드 시 반드시 `--target-platform android-arm64` 명시 (Apple Silicon Mac)
+
+### ⚠️ 패키지명 함정 — 반드시 확인
+`flutter create` 시 앱 이름에 언더스코어가 있으면 (예: `unit_converter`) Kotlin 소스 경로가
+`com/quiettools/unit_converter/MainActivity.kt` 로 생성됨.
+하지만 applicationId는 `com.quiettools.unitconverter` (언더스코어 없음)로 설정.
+→ **반드시 MainActivity.kt 를 올바른 패키지 경로로 이동하고 package 선언 수정!**
+
+```bash
+# 올바른 경로
+android/app/src/main/kotlin/com/quiettools/unitconverter/MainActivity.kt
+# package 선언
+package com.quiettools.unitconverter
+```
+
+---
+
+## 🚀 앱 빌드 & 배포 프로세스
+
+### 배포 인프라
+- **Android:** Fastlane + Google Play Developer API
+  - 서비스 계정: `fastlane-supply@fastlane-deploy-smymac.iam.gserviceaccount.com`
+  - 키 파일: `ondevice/fastlane-key.json` (gitignore, 절대 커밋 금지)
+- **Android 키스토어:**
+  - 파일: `ondevice/upload-keystore.jks` (gitignore, 절대 커밋 금지)
+  - Alias: `quiet-tools`
+  - Password: `QuietTools2026!`
+  - key.properties: 각 앱 `android/key.properties`
+- **iOS:** Fastlane + App Store Connect API
+  - Key ID: `7BFCYMJR35`
+  - Issuer ID: `01d9f1e4-b7c4-4b2e-85f4-8429843e596d`
+  - 키 파일: `ondevice/fastlane/api_key.json` (gitignore, 절대 커밋 금지)
+- **Team ID:** `V4F8HLUS24`
+
+---
+
+### 신규 앱 출시 체크리스트 (앱 하나 출시 전 필수)
+
+#### Android
+- [ ] Google Play Console에서 앱 생성 (패키지명 정확히 입력)
+- [ ] 첫 AAB 빌드 후 **수동으로** Play Console에 업로드 (최초 1회만)
+  - 빌드: `cd apps/{앱명} && flutter build appbundle --release`
+  - AAB 위치: `apps/{앱명}/build/app/outputs/bundle/release/app-release.aab`
+  - Play Console → 내부 테스트 → 새 버전 → AAB 직접 업로드
+- [ ] 첫 수동 업로드 이후부터는 Fastlane 자동화 사용 가능
+
+#### iOS
+- [ ] App Store Connect에서 앱 생성 (Bundle ID: `com.quiettools.{앱명}`)
+- [ ] Xcode에서 Bundle ID 일치 확인 후 Archive → Upload (최초 1회)
+- [ ] 첫 수동 업로드 이후부터는 Fastlane 자동화 사용 가능
+
+---
+
+### Fastlane 자동 배포 명령어 (최초 수동 업로드 이후)
+
+```bash
+# 작업 경로
+cd /Users/smymac/Documents/ondevice
+
+# ── Android ──────────────────────────────────────
+# 내부 테스트 배포
+fastlane android internal app:{앱폴더명}
+
+# 비공개 테스트 (alpha)
+fastlane android alpha app:{앱폴더명}
+
+# 프로덕션 (draft — Play Console에서 직접 출시)
+fastlane android production app:{앱폴더명}
+
+# ── iOS ──────────────────────────────────────────
+# TestFlight 내부 테스트
+fastlane ios testflight app:{앱폴더명}
+
+# App Store 업로드 (심사 제출 없음)
+fastlane ios appstore app:{앱폴더명}
+```
+
+**예시:**
+```bash
+fastlane android internal app:unit_converter
+fastlane ios testflight app:unit_converter
+```
+
+---
+
+### 패키지명 / Bundle ID 목록
+
+| 앱 폴더명 | 패키지명 |
+|---------|---------|
+| unit_converter | `com.quiettools.unitconverter` |
+| loan_calculator | `com.quiettools.loancalculator` |
+| first_aid | `com.quiettools.firstaid` |
+| habit_tracker | `com.quiettools.habittracker` |
+| budget | `com.quiettools.budget` |
+| workout | `com.quiettools.workout` |
+| journal | `com.quiettools.journal` |
+| book_log | `com.quiettools.booklog` |
+| white_noise | `com.quiettools.whitenoise` |
+| tuner | `com.quiettools.tuner` |
+
+---
+
+### 배포 현황
+
+| 앱 | Android | iOS |
+|---|---------|-----|
+| 단위 변환기 | ⏳ 최초 수동 업로드 필요 | 🔲 미등록 |
+| 대출 이자 계산기 | 🔲 개발 전 | 🔲 개발 전 |
+| 응급처치 가이드 | 🔲 개발 전 | 🔲 개발 전 |
+| 습관 추적기 | 🔲 개발 전 | 🔲 개발 전 |
+| 가계부 | 🔲 개발 전 | 🔲 개발 전 |
+| 운동 세트 기록기 | 🔲 개발 전 | 🔲 개발 전 |
+| 일기/저널 | 🔲 개발 전 | 🔲 개발 전 |
+| 독서 기록 앱 | 🔲 개발 전 | 🔲 개발 전 |
+| 백색소음/수면 사운드 | 🔲 개발 전 | 🔲 개발 전 |
+| 튜너 | 🔲 개발 전 | 🔲 개발 전 |

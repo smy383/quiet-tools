@@ -16,11 +16,9 @@ class UnitConverterApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeModeAsync = ref.watch(themeModeProvider);
-    final amoledAsync = ref.watch(amoledModeProvider);
-
-    final themeMode = themeModeAsync.valueOrNull ?? ThemeMode.system;
-    final amoled = amoledAsync.valueOrNull ?? false;
+    final themeMode =
+        ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.system;
+    final amoled = ref.watch(amoledModeProvider).valueOrNull ?? false;
 
     return MaterialApp(
       title: '단위 변환기',
