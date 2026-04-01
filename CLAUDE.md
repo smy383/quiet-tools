@@ -215,7 +215,7 @@ ttapp is a sophisticated product built with a complex combination of many techno
 
 ### 작업 이력
 - **2026-03-31:** melos + fvm 구성, packages/shared 디자인 시스템, 단위 변환기 완성, GitHub 푸시
-- **2026-04-01:** unit_converter 삭제 후 재개발 예정 (에뮬레이터 디버깅 과정에서 삭제)
+- **2026-04-01:** unit_converter 재개발 완료. 에뮬레이터 정상 동작 확인 (Android35_16KB)
 
 ---
 
@@ -268,6 +268,71 @@ android/app/src/main/kotlin/com/quiettools/unitconverter/MainActivity.kt
 # package 선언
 package com.quiettools.unitconverter
 ```
+
+### ⚠️ 신규 앱 생성 후 전체 체크리스트
+
+앱 생성(`flutter create`) 직후 아래를 **순서대로** 적용:
+
+1. **MainActivity.kt 패키지 경로 수정** (언더스코어 제거)
+   ```bash
+   mkdir -p android/app/src/main/kotlin/com/quiettools/{앱명무언더스코어}/
+   # MainActivity.kt 이동 + package 선언 수정
+   ```
+
+2. **`android/gradle.properties`** 에 추가:
+   ```properties
+   android.experimental.enableNativeLinker16KPageSize=true
+   ```
+
+3. **`android/app/build.gradle.kts`** 수정:
+   - `applicationId = "com.quiettools.{앱명무언더스코어}"`
+   - `namespace = "com.quiettools.{앱명무언더스코어}"`
+   - `multiDexEnabled = true`
+   - release signingConfig 추가
+
+4. **`android/key.properties`** 생성:
+   ```
+   storePassword=QuietTools2026!
+   keyPassword=QuietTools2026!
+   keyAlias=quiet-tools
+   storeFile=../../../../upload-keystore.jks
+   ```
+
+5. **`android/app/src/main/AndroidManifest.xml`** `<application>` 태그:
+   ```xml
+   android:extractNativeLibs="true"
+   tools:replace="android:extractNativeLibs"
+   xmlns:tools="http://schemas.android.com/tools"
+   ```
+   + AdMob App ID 테스트 ID 추가:
+   ```xml
+   <meta-data
+       android:name="com.google.android.gms.ads.APPLICATION_ID"
+       android:value="ca-app-pub-3940256099942544~3347511713"/>
+   ```
+
+6. **빌드 & 에뮬레이터 테스트:**
+   ```bash
+   flutter build apk --debug --target-platform android-arm64
+   adb install build/app/outputs/flutter-apk/app-debug.apk
+   ```
+
+### ⚠️ Riverpod AutoDispose + Navigator 주의
+`AutoDisposeNotifierProvider`에서 `ref.read(provider.notifier).setXxx()` 후 `Navigator.push()` 하면
+push 타이밍에 provider가 dispose되어 상태가 초기화됨.
+→ **화면에 데이터를 파라미터로 직접 전달할 것:**
+```dart
+// ❌ 이렇게 하지 말 것
+ref.read(provider.notifier).setCategory(category);
+Navigator.push(context, MaterialPageRoute(builder: (_) => const Screen()));
+
+// ✅ 이렇게 할 것
+Navigator.push(context, MaterialPageRoute(builder: (_) => Screen(category: category)));
+```
+
+### ⚠️ 광고 배너 시스템 네비게이션바 처리
+`AppScaffold`의 광고 배너는 `Scaffold.bottomNavigationBar` + `SafeArea`로 처리됨.
+→ 직접 Column에 배너를 넣으면 네비게이션바에 가려짐. 반드시 `AppScaffold` 사용할 것.
 
 ---
 
