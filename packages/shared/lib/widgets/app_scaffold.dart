@@ -59,15 +59,18 @@ class AppScaffold extends StatelessWidget {
       );
     }
 
-    // 하단 광고는 bottomNavigationBar에 배치 → 시스템 네비게이션바 inset 자동 처리
+    // 하단 광고는 bottomNavigationBar에 배치 → SafeArea로 시스템 네비게이션바 inset 처리
     Widget? effectiveBottomBar = bottomNavigationBar;
     if (adBanner != null && adBannerPosition == AdBannerPosition.bottom) {
-      effectiveBottomBar = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (bottomNavigationBar != null) bottomNavigationBar!,
-          adBanner,
-        ],
+      effectiveBottomBar = SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (bottomNavigationBar != null) bottomNavigationBar!,
+            adBanner,
+          ],
+        ),
       );
     }
 
